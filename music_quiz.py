@@ -1,13 +1,24 @@
 #!/usr/bin/python3
 
 """Guess the notes
-copyright 1997 - 2020 by Elliott Woodward"""
+copyright 1997 - 2020 by Elliott Woodward
+
+TODO:
+- build out the quiz part
+- add cureses sub-windows for ease of output placement
+- print_staff() uses logic from when this was a pure string-building,
+    linear function. Using curses, this can be cleaned up by printing a blank
+    staff, then painting the notes where they go
+- check size of console, resize to minimum requirements
+- horizontal scrolling, allowing any number of notes to be guessed
+"""
 
 import random
 import curses
 from curses import wrapper
 
-DEBUG = True
+
+DEBUG = False
 NOTE_SYMBOL = "0"
 PADDING = 4
 NUMBER_PER_LINE = 13
@@ -110,7 +121,7 @@ def nums_to_letters(nums, clef='treble'):
 
 
 def quiz_player(screen, letters):
-    """Quiz player on displayed staff.
+    """Quiz player on displayed staff and return number of correct answers.
 
     Argument:
     screen  -- Curses screen object to print to
@@ -132,31 +143,34 @@ def play_again(screen):
     """
     green_text = curses.color_pair(3)
     another = ''
+    screen.addstr(13, 0, "Would you like to try another? (y/n): ", green_text)
     while another not in (ord('y'), ord('n')):
-        screen.addstr(13, 0, "Would you like to try another? (y/n): ", green_text)
         another = screen.getch()
     return another is ord('y')
 
-
-def main(stdscr):
-    """Start the quiz"""
+def init_quiz():
+    """Set up curses and seed random."""
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
     random.seed()
-    stdscr.refresh()
+
+
+def main(stdscr):
+    """Contains the main program loop."""
+    init_quiz()
 
     again = True
     while again:
         answer_nums = generate_notes(NUMBER_PER_LINE)
         answer_letters = nums_to_letters(answer_nums)
+
         if DEBUG:
             debug_nums = ''.join(map(str, answer_nums)) + '\n'
             debug_letters = ''.join(answer_letters) + '\n'
             stdscr.addstr(14, 5, debug_nums)
             stdscr.addstr(15, 5, debug_letters)
         print_staff(stdscr, answer_nums)
-
         print_notes(stdscr, answer_letters)
         stdscr.refresh()
         quiz_player(stdscr, answer_letters)
